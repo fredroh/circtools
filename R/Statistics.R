@@ -1,3 +1,4 @@
+#' @export
 circ.plot <- function(x, r=NULL, weight=TRUE, ci=0.95,cords="geo", sep=0.05, pch=16, mvlength=0.2, mvlwd=3, arrowlength=0.1, arrowlwd=0.1, shrink=1.2, zero=pi/2, stack=T, rotation="clock", col="gray40", mv=TRUE, mvcol="blue", cicol="black", cilwd=2, main=NULL, dist=0.2, citick=0.05) {
   stopifnot(is.numeric(x))
   x <- circular(deg2rad(x))
@@ -74,6 +75,7 @@ circ.plot <- function(x, r=NULL, weight=TRUE, ci=0.95,cords="geo", sep=0.05, pch
   }
 }
 
+#' @export
 confidence_angle_weighted <- function (x, conf.level = 0.95, w = NULL, axial = FALSE, na.rm = TRUE)
 {
   if (axial) {
@@ -87,9 +89,10 @@ confidence_angle_weighted <- function (x, conf.level = 0.95, w = NULL, axial = F
   temp <- Z_alpha * sde
   if (temp > 1)
     temp <- 1
-  NISTradianTOdeg(asin(temp) * f)
+  rad2deg(asin(temp) * f)
 }
 
+#' @export
 circ_rho_zar <- function(a,r) {
   x<-list()
   y<-list()
@@ -104,7 +107,7 @@ circ_rho_zar <- function(a,r) {
 }
 
 # R vector length now calculates the zar weighted r vector length from circ_rho_zar(), similar to Oriana.
-
+#' @export
 circular_sd_error_weighted <- function (x, w = NULL, axial = FALSE, na.rm = TRUE)
 {
   if (axial) {
@@ -129,6 +132,7 @@ circular_sd_error_weighted <- function (x, w = NULL, axial = FALSE, na.rm = TRUE
   1/sqrt(n * R * kappa)
 }
 
+#' @export
 confidence_interval_weighted <- function (x, conf.level = 0.95, w = NULL, axial = FALSE, na.rm = TRUE)
 {
   conf.angle <- confidence_angle_weighted(x, conf.level, w, axial,
@@ -138,22 +142,24 @@ confidence_interval_weighted <- function (x, conf.level = 0.95, w = NULL, axial 
                                                              conf.angle, mu + conf.angle))
 }
 
-
+#' @export
 deg2rad <- function(deg) {
   stopifnot(is.numeric(deg))
   (rad <- (pi/180)*deg )
 }
 
-
+#' @export
 rad2deg <- function(rad) {
   stopifnot(is.numeric(rad))
   (deg <- rad/(pi/180) )
 }
 
+#' @export
 z_score <- function(conf.level) {
   stats::qnorm(1 - (1 - conf.level) / 2)
 }
 
+#' @export
 est.kappa <- function(x, w = NULL, bias = FALSE, axial = TRUE) {
   # Default weights
   if (is.null(w)) {
@@ -186,6 +192,7 @@ est.kappa <- function(x, w = NULL, bias = FALSE, axial = TRUE) {
   kappa
 }
 
+#' @export
 mean_SC <- function(x, w = NULL, na.rm = TRUE) {
   stopifnot(any(is.numeric(x)), is.logical(na.rm))
 
@@ -214,6 +221,7 @@ mean_SC <- function(x, w = NULL, na.rm = TRUE) {
   setNames(sums / Z, nm = c("C", "S"))
 }
 
+#' @export
 circular_mean_rad <- function(x, w = NULL, na.rm = TRUE) {
   x <- rad2deg(x)
   m <- mean_SC(x, w, na.rm)
@@ -221,6 +229,7 @@ circular_mean_rad <- function(x, w = NULL, na.rm = TRUE) {
   unname(meanx_rad)
 }
 
+#' @export
 circular_mean_deg <- function(x, w = NULL, na.rm = TRUE) {
 
   m <- mean_SC(x, w, na.rm)
@@ -234,6 +243,7 @@ circular_mean_deg <- function(x, w = NULL, na.rm = TRUE) {
 # Moore, B. R. (1980). A modification of the Rayleigh test for vector data. Biometrika, 67(1), 175-180.
 # Input: x = angles in degrees, y = resultant vector lengths
 
+#' @export
 circ_MMRT <- function(x, y){
   v <- data.frame(as.numeric(x),as.numeric(y))
   v <- v %>% arrange(y)
@@ -254,8 +264,3 @@ circ_MMRT <- function(x, y){
   t <- list('p'= p, 'R_moore' = R_moore)
   return(t)
 }
-
-circ.plot(data$Phase2.A, data$Phase2.L, weight=T)
-
-confidence_interval_weighted(data$Phase2.A)
-
