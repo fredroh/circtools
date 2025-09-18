@@ -34,7 +34,7 @@
 
 
 #' @export
-circ.plot <- function(x, r=NULL, weight=TRUE, ci=0.95,labels="geo", sep=0.05, pch=16, mvwidth=0.2,
+circ.plot <- function(x, r=NULL, weight=TRUE, ci=0.95,labels="geo", cex=1, sep=0.05, pch=16, mvwidth=0.2,
                       mvlwd=3, arrowwidth=0.1, arrowlwd=0.1, shrink=1.2, zero=pi/2, stack=T,
                       rotation="clock", col="gray40", mv=TRUE, mvcol="blue", cicol="black", bins=120,
                       cilwd=2, main=NULL, dist=0.2, citick=0.05) {
@@ -65,7 +65,7 @@ circ.plot <- function(x, r=NULL, weight=TRUE, ci=0.95,labels="geo", sep=0.05, pc
   }
 
 
-  plot.circular(x, shrink=shrink, sep=sep, stack=stack, pch=pch, col=col, zero=zero,
+  plot.circular(x, shrink=shrink, cex=cex, sep=sep, stack=stack, pch=pch, col=col, zero=zero,
                 main=main, axes=F, rotation=rotation, bins=bins)
   axis.circular(at=circular(c(0, pi/2, pi, 3*pi/2)), labels=labels, zero=NULL, rotation=rotation)
   if (!is.null(r)) {
