@@ -12,12 +12,6 @@ circ.rayleigh(x, w = NULL, axial = FALSE, nperm = 0, seed = NULL)
 \item{w}{Optional weights}
 
 \item{axial}{Logical. if TRUE treat data as axial (0–180°)}
-
-\item{conf.level}{Confidence level (e.g. 0.95)}
-
-\item{na.rm}{Logical. if TRUE remove NA pairs}
-
-\item{method}{“clt” or “ori"}
 }
 \description{
 Conducts a test of directedness based on inputs. If no weights and axial=F, then the regular Rayleigh test is conducted.

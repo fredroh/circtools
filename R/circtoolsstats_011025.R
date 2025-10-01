@@ -476,11 +476,8 @@ confidence.angle <- function(
 #' If axial=T, angles are doubled, before conducting test based on weights.
 
 #' @param x       Numeric vector of angles (in degrees)
-#' @param conf.level  Confidence level (e.g. 0.95)
 #' @param w       Optional weights
 #' @param axial   Logical. if TRUE treat data as axial (0–180°)
-#' @param na.rm   Logical. if TRUE remove NA pairs
-#' @param method  “clt” or “ori"
 
 #' @export
 circ.rayleigh <- function(x, w = NULL, axial = FALSE, nperm = 0, seed = NULL) {
