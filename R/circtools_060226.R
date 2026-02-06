@@ -50,7 +50,7 @@ circ.plot <- function(x, r = NULL, weight = FALSE, ci = 0.95,
   units <- match.arg(units)
   labels <- match.arg(labels)
   norm <- match.arg(norm)
-  metjhod <- match.arg(method)
+  method <- match.arg(method)
 
   # helpers expected in environment: deg2rad, rad2deg, circ.stats, confidence_interval_weighted, circ.rayleigh
 
@@ -1078,4 +1078,5 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
   rownames(df_out) <- NULL
   df_out
 }
+
 
