@@ -448,46 +448,46 @@ confidence.angle <- function(
 
     ori = {
       n_ori <- length(x)
-      R_ori <- stats$R_unscaled         
+      R_ori <- stats$R_unscaled
       Rbar  <- if (n_ori > 0) R_ori / n_ori else 0
-      
+
       # 95% small‑angle is only valid for very high concentration
       if (Rbar > 0.9) {
         # Oriana small-angle SE (radians)
         SE_ori <- sqrt((1 - Rbar) / R_ori)
         hw <- Z_alpha * SE_ori
         if (axial) hw <- hw / 2
-        return(hw)                      
+        return(hw)
       }
-      
+
       # (Zar-style) CI used by Oriana/CircStat MATLAB
       # Use chi-square critical value with 1 df (not F)
       # circ_confmean uses c2 = chi2inv(1 - xi, 1); with xi = 1 - conf.level
       c2 <- stats::qchisq(conf.level, df = 1)
-      
+
       # Requirement (Zar): rbar must exceed sqrt(c2 / (2n)), otherwise no finite CI
       # (CircStat returns NaN; we signal Inf so circ.confint() can fallback if desired)
       thresh <- sqrt(c2 / (2 * n_ori))
       if (!(is.finite(Rbar) && Rbar > thresh)) {
         return(Inf)
       }
-      
+
       # Zar / CircStat intermediate 't' (see circ_confmean.m, eq. 26.24 & 26.25 logic)
       # For rbar < 0.9 branch:
       t_sq <- (2 * n_ori * (2 * R_ori^2 - n_ori * c2)) / (4 * n_ori - c2)
       t_sq <- max(t_sq, 0)            # guard small negatives from round-off
       t    <- sqrt(t_sq)
-      
+
       #  transform to half-width (radians): delta = acos( t / R )
       # (CircStat applies this as the “final transform”)
       inside <- t / R_ori
       inside <- min(max(inside, -1), 1)  # numerical guard for acos
       hw <- acos(inside)
-      
+
       if (axial) hw <- hw / 2
       hw
     },
-    
+
 
     # CLT normal‐approximation (unbounded)
     clt = {
@@ -662,14 +662,14 @@ get.mean.data <- function(path = NULL, channel = NULL, phases=NULL, phaselength=
                           full.names = TRUE)
 
   if (length(txt_files) == 0) stop("No .txt files found in path")
-  
+
   # data input
   samplingrate <- samplingrate  # The sampling rate set in the encoder software
   resolution <- 1000 / samplingrate  # in Hz
   phaselength <- phaselength  # Change if necessary
   phases <- phases  # Change if necessary
 
-  
+
   # Pre‐allocate one row per file
   N <- length(txt_files)
 
@@ -867,14 +867,14 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
                           phaselength = NULL, blocks = NULL,
                           axial = NULL, samplingrate = 200,
                           all = FALSE, names = FALSE, verbose = FALSE) {
-  
+
   if (is.null(path)) path <- choose.dir("Choose data directory")
   txt_files <- list.files(path = path, pattern = "\\.txt$", full.names = TRUE)
   if (length(txt_files) == 0) stop("No .txt files found in path")
-  
+
   # resolution = samples per second (your original logic)
   resolution <- 1000 / samplingrate
-  
+
   # Build blocks vector: if NULL, use phaselength for all phases
   if (is.null(blocks)) {
     if (is.null(phaselength)) stop("Either phaselength or blocks must be provided")
@@ -882,32 +882,32 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
   } else {
     if (length(blocks) != phases) stop("Length of 'blocks' must equal 'phases'")
   }
-  
+
   # samples per phase (absolute value), and sign indicates first/last
   samples_per_phase <- as.integer(round(abs(blocks) * resolution))
   if (any(samples_per_phase <= 0)) stop("blocks and samplingrate produce zero samples for a phase")
-  
+
   cum_samples_needed <- cumsum(samples_per_phase)
   max_vals <- sum(samples_per_phase)
-  
+
   results_list <- vector("list", length = 0)
-  
+
   for (file in txt_files) {
     name <- basename(file)
     if (verbose) cat("Processing:", name, "\n")
-    
+
     df <- tryCatch(read.delim(file, header = FALSE, sep = "", stringsAsFactors = FALSE),
                    error = function(e) NULL)
     if (is.null(df)) {
       if (verbose) cat("  read error, skipping\n")
       next
     }
-    
+
     if (channel > ncol(df) || channel < 1) {
       if (verbose) cat("  channel", channel, "not found (ncol =", ncol(df), "), skipping\n")
       next
     }
-    
+
     angles <- df[[channel]] * 3
     L <- length(angles)
     if (verbose) {
@@ -915,43 +915,43 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
       cat("  samples per phase:", paste(samples_per_phase, collapse = ","), "\n")
       cat("  blocks (sign indicates first/last):", paste(blocks, collapse = ","), "\n")
     }
-    
+
     # Determine how many full phases fit
     num_full_phases <- sum(cum_samples_needed <= L)
-    
+
     # If no full phase fits but there are some samples, allow a partial first phase
     if (num_full_phases == 0 && L >= 1) {
       numphase_available <- 1
     } else {
       numphase_available <- min(phases, num_full_phases)
     }
-    
+
     # If user requires all full phases, skip files that don't contain all full phases
     if (isFALSE(all) && num_full_phases < phases) {
       if (verbose) cat("  skipping (not all full phases present)\n")
       next
     }
-    
+
     # Trim to maximum allowed samples (avoid accidental extra phases)
     if (L > max_vals) {
       angles <- angles[1:max_vals]
       L <- length(angles)
       if (verbose) cat("  trimmed to max_vals:", max_vals, "\n")
     }
-    
+
     # Compute start/end indices for each phase (based on samples_per_phase)
     starts <- c(1, head(cum_samples_needed, -1) + 1)
     ends   <- cum_samples_needed
-    
+
     circmeans    <- rep(NA_real_, phases)
     circr        <- rep(NA_real_, phases)
     circrayleigh <- rep(NA_real_, phases)
-    
+
     for (i in seq_len(numphase_available)) {
       start_full <- starts[i]
       end_full   <- ends[i]
       desired    <- samples_per_phase[i]
-      
+
       # If blocks[i] > 0 take first desired samples inside the phase window
       if (blocks[i] > 0) {
         start_i <- start_full
@@ -961,17 +961,17 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
         start_i <- max(start_full, end_full - desired + 1)
         end_i   <- min(end_full, L)
       }
-      
+
       if (start_i > end_i) {
         # no samples available for this phase -> leave NA
         if (verbose) cat("  phase", i, "has no samples (start_i >", "end_i)\n")
         next
       }
-      
+
       phase_vec <- angles[start_i:end_i]
-      
+
       type <- if (!is.null(axial) && i %in% axial) "axial" else "angles"
-      
+
       stats <- circ.stats(phase_vec, type = type, unit = "deg")
       circmeans[i]    <- stats$mean_orientation
       circr[i]        <- stats$vector_length
@@ -981,7 +981,7 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
         circ.rayleigh(phase_vec)$p.value
       }
     }
-    
+
     # compute changes between consecutive available phases
     changes <- rep(NA_real_, phases - 1)
     if (phases > 1 && numphase_available > 1) {
@@ -990,7 +990,7 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
         a2  <- circmeans[i + 1]
         ax1 <- !is.null(axial) && i %in% axial
         ax2 <- !is.null(axial) && (i + 1) %in% axial
-        
+
         key <- paste(as.integer(ax1), as.integer(ax2), sep = "_")
         changes[i] <- switch(
           key,
@@ -1009,7 +1009,7 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
         )
       }
     }
-    
+
     # Build row info
     info <- file.info(file)
     Date <- format(info$mtime, "%d.%m.%Y")
@@ -1017,22 +1017,22 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
     ID  <- tail(strsplit(name, "\\.")[[1]])[[1]]
     Exp <- tail(strsplit(name, "_|\\.")[[1]], 4)[1]
     Num <- tail(strsplit(name, "_|\\.|-")[[1]])[[3]]
-    
+
     if (isTRUE(names)) {
       infovec <- c(ID, Num, Exp, Date, Time)
     } else {
       infovec <- c(ID, Date, Time)
     }
-    
+
     row <- c(infovec,
              as.list(circmeans),
              as.list(circr),
              as.list(changes),
              as.list(circrayleigh))
-    
+
     results_list[[length(results_list) + 1]] <- row
   }
-  
+
   # If no files processed, return empty data.frame with appropriate column names
   if (length(results_list) == 0) {
     if (isTRUE(names)) {
@@ -1047,7 +1047,7 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
     allcols <- c(infocols, meancols, rcols, changecols, raycols)
     return(as.data.frame(matrix(ncol = length(allcols), nrow = 0, dimnames = list(NULL, allcols))))
   }
-  
+
   # Convert list of rows to data.frame
   if (isTRUE(names)) {
     infocols <- c("ID", "Num", "Exp", "Date", "Time")
@@ -1059,24 +1059,23 @@ get.mean.data2 <- function(path = NULL, channel = NULL, phases = NULL,
   changecols <- if (phases > 1) paste0("Change", 1:(phases - 1)) else character(0)
   raycols  <- paste0("Rayleigh", 1:phases)
   colnames_all <- c(infocols, meancols, rcols, changecols, raycols)
-  
+
   df_out <- as.data.frame(do.call(rbind, lapply(results_list, function(x) {
     xvec <- unlist(x, use.names = FALSE)
     len_needed <- length(colnames_all)
     if (length(xvec) < len_needed) xvec <- c(xvec, rep(NA, len_needed - length(xvec)))
     xvec
   })), stringsAsFactors = FALSE)
-  
+
   colnames(df_out) <- colnames_all
   num_cols <- setdiff(colnames(df_out), infocols)
   df_out[num_cols] <- lapply(df_out[num_cols], function(x) as.numeric(as.character(x)))
-  
+
   if (isFALSE(all)) {
     df_out <- df_out[complete.cases(df_out[meancols]), , drop = FALSE]
   }
-  
+
   rownames(df_out) <- NULL
   df_out
 }
-
 
